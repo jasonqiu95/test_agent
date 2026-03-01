@@ -101,13 +101,15 @@ function createDefaultProject(): BookProject {
 }
 
 export const useProjectStore = create<ProjectState>()(
-  immer((set, get) => ({
-    project: createDefaultProject(),
-    currentElementId: null,
-    hasUnsavedChanges: false,
-    history: [],
-    historyIndex: -1,
-    maxHistoryLength: 50,
+  immer((set, get) => {
+    const defaultProject = createDefaultProject();
+    return {
+      project: defaultProject,
+      currentElementId: defaultProject.elements[0]?.id || null,
+      hasUnsavedChanges: false,
+      history: [],
+      historyIndex: -1,
+      maxHistoryLength: 50,
 
     createNewProject: () => {
       const newProject = createDefaultProject();
@@ -314,5 +316,6 @@ export const useProjectStore = create<ProjectState>()(
       const { history, historyIndex } = get();
       return historyIndex < history.length - 1;
     },
-  }))
+  };
+  })
 );
