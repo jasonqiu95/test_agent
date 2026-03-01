@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { MainLayout } from './components/Layout/MainLayout';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 function App() {
   useEffect(() => {
@@ -7,7 +8,11 @@ function App() {
     document.documentElement.classList.add('dark');
   }, []);
 
-  return <MainLayout />;
+  return (
+    <ErrorBoundary>
+      <MainLayout />
+    </ErrorBoundary>
+  );
 }
 
 export default App;
