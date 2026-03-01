@@ -17,6 +17,8 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { StyleBrowser } from '../Styles/StyleBrowser';
+import { StyleCustomizer } from '../Styles/StyleCustomizer';
 
 type NavigatorTab = 'contents' | 'styles';
 
@@ -319,10 +321,36 @@ function AddElementMenu({ onSelect }: AddElementMenuProps) {
 }
 
 function StylesPanel() {
+  const [view, setView] = useState<'browser' | 'customizer'>('browser');
+
   return (
-    <div className="p-4">
-      <div className="text-sm text-gray-600 dark:text-gray-400">
-        Book styles will be implemented in Phase 8
+    <div className="h-full flex flex-col">
+      {/* View toggle */}
+      <div className="flex border-b border-gray-200 dark:border-gray-700">
+        <button
+          onClick={() => setView('browser')}
+          className={`flex-1 px-4 py-2 text-xs font-medium transition-colors ${
+            view === 'browser'
+              ? 'bg-white dark:bg-gray-900 text-primary-600 dark:text-primary-400 border-b-2 border-primary-600'
+              : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
+          }`}
+        >
+          Browse
+        </button>
+        <button
+          onClick={() => setView('customizer')}
+          className={`flex-1 px-4 py-2 text-xs font-medium transition-colors ${
+            view === 'customizer'
+              ? 'bg-white dark:bg-gray-900 text-primary-600 dark:text-primary-400 border-b-2 border-primary-600'
+              : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
+          }`}
+        >
+          Customize
+        </button>
+      </div>
+
+      <div className="flex-1 overflow-hidden">
+        {view === 'browser' ? <StyleBrowser /> : <StyleCustomizer />}
       </div>
     </div>
   );

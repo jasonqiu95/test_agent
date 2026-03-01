@@ -1,9 +1,11 @@
 import { useMemo } from 'react';
 import { useProjectStore } from '../../stores/project-store';
 import { ProseMirrorEditor } from './ProseMirrorEditor';
+import { useBookStyle } from '../../hooks/useBookStyle';
 
 export function Editor() {
   const { project, currentElementId, updateElement } = useProjectStore();
+  useBookStyle();
 
   const currentElement = useMemo(() => {
     if (!project || !currentElementId) return null;
@@ -55,11 +57,13 @@ export function Editor() {
 
       {/* Editor content area */}
       <div className="flex-1 overflow-y-auto bg-white dark:bg-gray-900">
-        <div className="max-w-4xl mx-auto py-8">
-          <ProseMirrorEditor
-            content={currentElement.content}
-            onChange={handleContentChange}
-          />
+        <div className="max-w-4xl mx-auto py-8 px-8">
+          <div className="book-content">
+            <ProseMirrorEditor
+              content={currentElement.content}
+              onChange={handleContentChange}
+            />
+          </div>
         </div>
       </div>
     </div>
