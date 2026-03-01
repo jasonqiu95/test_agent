@@ -210,6 +210,32 @@ ipcMain.handle('import:docx', async (_event, filePath: string) => {
   }
 });
 
+// Save arbitrary file
+ipcMain.handle('file:save-file', async (_event, fileName: string, buffer: ArrayBuffer) => {
+  if (!mainWindow) return { success: false, error: 'No window' };
+
+  try {
+    const result = await dialog.showSaveDialog(mainWindow, {
+      title: 'Save File',
+      defaultPath: fileName,
+      filters: [
+        { name: 'EPUB', extensions: ['epub'] },
+        { name: 'PDF', extensions: ['pdf'] },
+        { name: 'All Files', extensions: ['*'] },
+      ],
+    });
+
+    if (result.canceled || !result.filePath) {
+      return { success: false, error: 'User cancelled' };
+    }
+
+    await fs.writeFile(result.filePath, Buffer.from(buffer));
+    return { success: true, filePath: result.filePath };
+  } catch (error) {
+    return { success: false, error: (error as Error).message };
+  }
+});
+
 // Export operations
 ipcMain.handle('export:epub', async (_event, projectData: any, settings: any) => {
   // Implementation will be added in Phase 10

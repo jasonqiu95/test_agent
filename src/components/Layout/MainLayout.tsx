@@ -4,6 +4,7 @@ import { Navigator } from '../Navigator/Navigator';
 import { Editor } from '../Editor/Editor';
 import { Preview } from '../Preview/Preview';
 import { ImportDialog } from '../Dialogs/ImportDialog';
+import { GenerateDialog } from '../Dialogs/GenerateDialog';
 import { useProjectStore } from '../../stores/project-store';
 import { useFileOperations } from '../../hooks/useFileOperations';
 import { importDocx } from '../../services/docx-importer/DocxImporter';
@@ -12,6 +13,7 @@ import { BookElement } from '../../models/Book';
 export function MainLayout() {
   const [theme, setTheme] = useState<'light' | 'dark'>('dark');
   const [importData, setImportData] = useState<{ elements: BookElement[]; warnings: string[] } | null>(null);
+  const [showGenerateDialog, setShowGenerateDialog] = useState(false);
   const { project } = useProjectStore();
   const { saveProject, openProject, hasUnsavedChanges } = useFileOperations();
   const projectStore = useProjectStore();
@@ -91,7 +93,10 @@ export function MainLayout() {
           >
             Save
           </button>
-          <button className="px-3 py-1.5 text-sm bg-primary-600 hover:bg-primary-700 text-white rounded-md transition-colors">
+          <button
+            onClick={() => setShowGenerateDialog(true)}
+            className="px-3 py-1.5 text-sm bg-primary-600 hover:bg-primary-700 text-white rounded-md transition-colors"
+          >
             Generate
           </button>
           <div className="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-2" />
@@ -143,6 +148,9 @@ export function MainLayout() {
           onCancel={() => setImportData(null)}
         />
       )}
+
+      {/* Generate Dialog */}
+      {showGenerateDialog && <GenerateDialog onClose={() => setShowGenerateDialog(false)} />}
     </div>
   );
 }

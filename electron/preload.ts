@@ -10,6 +10,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     showImportDialog: () => ipcRenderer.invoke('file:show-import-dialog'),
     save: (filePath: string, data: any) => ipcRenderer.invoke('file:save', filePath, data),
     load: (filePath: string) => ipcRenderer.invoke('file:load', filePath),
+    saveFile: (fileName: string, buffer: ArrayBuffer) =>
+      ipcRenderer.invoke('file:save-file', fileName, buffer),
   },
 
   // Import operations
@@ -62,6 +64,7 @@ export interface ElectronAPI {
     showImportDialog: () => Promise<string | null>;
     save: (filePath: string, data: any) => Promise<{ success: boolean; error?: string }>;
     load: (filePath: string) => Promise<{ success: boolean; data?: any; error?: string }>;
+    saveFile: (fileName: string, buffer: ArrayBuffer) => Promise<{ success: boolean; filePath?: string; error?: string }>;
   };
   import: {
     docx: (filePath: string) => Promise<{ success: boolean; html?: string; messages?: any[]; error?: string }>;
