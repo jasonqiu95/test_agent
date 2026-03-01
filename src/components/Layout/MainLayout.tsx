@@ -3,13 +3,18 @@ import { ResizablePanel } from './ResizablePanel';
 import { Navigator } from '../Navigator/Navigator';
 import { Editor } from '../Editor/Editor';
 import { Preview } from '../Preview/Preview';
+import { ImportDialog } from '../Dialogs/ImportDialog';
 import { useProjectStore } from '../../stores/project-store';
 import { useFileOperations } from '../../hooks/useFileOperations';
+import { importDocx } from '../../services/docx-importer/DocxImporter';
+import { BookElement } from '../../models/Book';
 
 export function MainLayout() {
   const [theme, setTheme] = useState<'light' | 'dark'>('dark');
+  const [importData, setImportData] = useState<{ elements: BookElement[]; warnings: string[] } | null>(null);
   const { project } = useProjectStore();
   const { saveProject, openProject, hasUnsavedChanges } = useFileOperations();
+  const projectStore = useProjectStore();
 
   const toggleTheme = () => {
     setTheme(theme === 'dark' ? 'light' : 'dark');
@@ -18,6 +23,35 @@ export function MainLayout() {
     } else {
       document.documentElement.classList.remove('dark');
     }
+  };
+
+  const handleImportDocx = async () => {
+    try {
+      const filePath = await window.electronAPI.file.showImportDialog();
+      if (!filePath) return; // User cancelled
+
+      const result = await importDocx(filePath);
+      setImportData(result);
+    } catch (error) {
+      console.error('Import error:', error);
+      alert(`Failed to import: ${(error as Error).message}`);
+    }
+  };
+
+  const handleConfirmImport = (elements: BookElement[]) => {
+    // Add imported elements to the project
+    elements.forEach(element => {
+      projectStore.addElement(element.type);
+      // Update the newly added element with imported data
+      const addedElement = projectStore.project?.elements[projectStore.project.elements.length - 1];
+      if (addedElement) {
+        projectStore.updateElement(addedElement.id, {
+          title: element.title,
+          content: element.content,
+        });
+      }
+    });
+    setImportData(null);
   };
 
   const projectName = project?.metadata.title || 'Untitled Project';
@@ -44,6 +78,12 @@ export function MainLayout() {
             className="px-3 py-1.5 text-sm bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-md transition-colors"
           >
             Open
+          </button>
+          <button
+            onClick={handleImportDocx}
+            className="px-3 py-1.5 text-sm bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-md transition-colors"
+          >
+            Import DOCX
           </button>
           <button
             onClick={() => saveProject()}
@@ -93,6 +133,16 @@ export function MainLayout() {
           <Preview />
         </ResizablePanel>
       </div>
+
+      {/* Import Dialog */}
+      {importData && (
+        <ImportDialog
+          elements={importData.elements}
+          warnings={importData.warnings}
+          onConfirm={handleConfirmImport}
+          onCancel={() => setImportData(null)}
+        />
+      )}
     </div>
   );
 }
