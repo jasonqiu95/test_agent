@@ -236,15 +236,91 @@ ipcMain.handle('file:save-file', async (_event, fileName: string, buffer: ArrayB
   }
 });
 
+// PDF generation in main process
+ipcMain.handle('export:generate-pdf', async (_event, projectData: any) => {
+  if (!mainWindow) return { success: false, error: 'No window' };
+
+  try {
+    const PDFDocument = require('pdfkit');
+
+    // Show save dialog
+    const result = await dialog.showSaveDialog(mainWindow, {
+      title: 'Save PDF',
+      defaultPath: `${projectData.metadata.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`,
+      filters: [{ name: 'PDF', extensions: ['pdf'] }],
+    });
+
+    if (result.canceled || !result.filePath) {
+      return { success: false, error: 'User cancelled' };
+    }
+
+    // Create PDF
+    const doc = new PDFDocument({
+      size: 'LETTER',
+      margins: { top: 72, bottom: 72, left: 72, right: 72 },
+    });
+
+    // Pipe to file
+    const writeStream = require('fs').createWriteStream(result.filePath);
+    doc.pipe(writeStream);
+
+    // Add content
+    doc.fontSize(24).text(projectData.metadata.title, { align: 'center' });
+    doc.moveDown();
+    doc.fontSize(16).text(`By ${projectData.metadata.author}`, { align: 'center' });
+    doc.moveDown(2);
+
+    // Add elements
+    for (const element of projectData.elements) {
+      doc.addPage();
+      doc.fontSize(18).text(element.title);
+      doc.moveDown();
+      doc.fontSize(12);
+
+      // Simple text extraction from ProseMirror content
+      const text = extractTextFromProseMirror(element.content);
+      doc.text(text);
+    }
+
+    doc.end();
+
+    // Wait for write to complete
+    await new Promise((resolve, reject) => {
+      writeStream.on('finish', resolve);
+      writeStream.on('error', reject);
+    });
+
+    return { success: true, filePath: result.filePath };
+  } catch (error) {
+    console.error('PDF generation error:', error);
+    return { success: false, error: (error as Error).message };
+  }
+});
+
+// Helper function to extract text from ProseMirror JSON
+function extractTextFromProseMirror(doc: any): string {
+  if (!doc || !doc.content) return '';
+
+  const extractNode = (node: any): string => {
+    if (node.type === 'text') {
+      return node.text || '';
+    }
+    if (node.content) {
+      return node.content.map(extractNode).join(' ');
+    }
+    return '';
+  };
+
+  return extractNode(doc);
+}
+
 // Export operations
 ipcMain.handle('export:epub', async (_event, projectData: any, settings: any) => {
-  // Implementation will be added in Phase 10
-  return { success: true, message: 'EPUB generation not yet implemented' };
+  return { success: true, message: 'Use EPUB builder in renderer' };
 });
 
 ipcMain.handle('export:pdf', async (_event, projectData: any, settings: any) => {
-  // Implementation will be added in Phase 11
-  return { success: true, message: 'PDF generation not yet implemented' };
+  return { success: true, message: 'Use PDF builder in main process' };
 });
 
 // App lifecycle

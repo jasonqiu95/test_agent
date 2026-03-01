@@ -25,6 +25,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
       ipcRenderer.invoke('export:epub', projectData, settings),
     pdf: (projectData: any, settings: any) =>
       ipcRenderer.invoke('export:pdf', projectData, settings),
+    generatePdf: (projectData: any) =>
+      ipcRenderer.invoke('export:generate-pdf', projectData),
   },
 
   // Menu event listeners
@@ -72,6 +74,7 @@ export interface ElectronAPI {
   export: {
     epub: (projectData: any, settings: any) => Promise<{ success: boolean; message?: string; error?: string }>;
     pdf: (projectData: any, settings: any) => Promise<{ success: boolean; message?: string; error?: string }>;
+    generatePdf: (projectData: any) => Promise<{ success: boolean; filePath?: string; error?: string }>;
   };
   onMenuEvent: (callback: (event: string, ...args: any[]) => void) => () => void;
 }

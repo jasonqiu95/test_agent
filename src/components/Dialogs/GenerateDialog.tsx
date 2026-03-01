@@ -25,9 +25,9 @@ export function GenerateDialog({ onClose }: GenerateDialogProps) {
     try {
       if (format === 'epub') {
         const blob = await generateEpub(project);
+        const fileName = `${project.metadata.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.epub`;
 
         // Save file
-        const fileName = `${project.metadata.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.epub`;
         const result = await window.electronAPI.file.saveFile(fileName, await blob.arrayBuffer());
 
         if (result.success) {
@@ -39,8 +39,17 @@ export function GenerateDialog({ onClose }: GenerateDialogProps) {
           setError(result.error);
         }
       } else {
-        // PDF generation will be implemented in Phase 11
-        setError('PDF generation coming soon!');
+        // PDF generation happens in main process
+        const result = await window.electronAPI.export.generatePdf(project);
+
+        if (result.success) {
+          setSuccess(true);
+          setTimeout(() => {
+            onClose();
+          }, 2000);
+        } else if (result.error) {
+          setError(result.error);
+        }
       }
     } catch (err) {
       setError((err as Error).message || 'Failed to generate file');
